@@ -1,4 +1,5 @@
 import 'package:classroom/pages/homepage.dart';
+import 'package:classroom/pages/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -16,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   String _errorMessage = '';
+  bool _isObscure = true; // Variable to toggle password visibility
 
   void _signInWithEmailAndPassword(BuildContext context) async {
     try {
@@ -52,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 300, left: 35, right: 35),
+              padding: const EdgeInsets.only(top: 200, left: 35, right: 35),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -135,11 +137,21 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: TextField(
                         controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _isObscure, // Use the toggle variable here
+                        decoration: InputDecoration(
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20, vertical: 20),
+                          suffixIcon: IconButton(
+                            icon: Icon(_isObscure
+                                ? Icons.visibility_off
+                                : Icons.visibility),
+                            onPressed: () {
+                              setState(() {
+                                _isObscure = !_isObscure; // Toggle visibility
+                              });
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -172,6 +184,22 @@ class _LoginPageState extends State<LoginPage> {
                           style: const TextStyle(color: Colors.red),
                         ),
                       ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => SignUp()),
+                        );
+                      },
+                      child: const Text(
+                        "Dont have an account? Sign Up",
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontFamily: 'poppins',
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

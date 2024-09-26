@@ -1,8 +1,10 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:classroom/main.dart';
+import 'package:classroom/pages/admin/register.dart';
 import 'package:classroom/pages/homepage.dart';
 import 'package:classroom/pages/task.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -28,6 +30,32 @@ class _ProfilePageState extends State<ProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error logging out: $e')),
       );
+    }
+  }
+
+  String? userRole; // Variabel untuk menyimpan role pengguna
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserRole(); // Ambil role pengguna saat halaman dimuat
+  }
+
+  // Fungsi untuk mengambil role pengguna dari Firestore
+  Future<void> _getUserRole() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        setState(() {
+          userRole = userDoc['role']; // Asumsikan 'role' disimpan di field ini
+        });
+      }
+    } catch (e) {
+      print('Error fetching user role: $e');
     }
   }
 
@@ -132,6 +160,26 @@ class _ProfilePageState extends State<ProfilePage> {
               },
             ),
             Divider(),
+            // Tampilkan opsi Register hanya jika userRole adalah 'admin'
+            if (userRole == 'Admin')
+              ListTile(
+                title: Text(
+                  'Register',
+                  style: TextStyle(
+                    fontFamily: 'poppins',
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            RegisterPage()), // Arahkan ke halaman registrasi
+                  ).then((_) {
+                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                  });
+                },
+              ),
           ],
         ),
       ),

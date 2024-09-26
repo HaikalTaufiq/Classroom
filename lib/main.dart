@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors_in_immutables
 
 import 'package:classroom/pages/loginpage.dart'; // Pastikan path ini benar
+import 'package:classroom/pages/signup.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -41,7 +42,6 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 50),
               child: ElevatedButton(
                 onPressed: () {
-                  // Arahkan ke halaman LoginPage
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => LoginPage()),
@@ -70,7 +70,10 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 10),
               child: ElevatedButton(
                 onPressed: () {
-                  // Anda bisa tambahkan aksi untuk tombol Sign Up di sini
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignUp()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xffF08585),
