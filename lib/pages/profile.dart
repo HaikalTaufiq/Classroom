@@ -1,9 +1,7 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:classroom/main.dart';
 import 'package:classroom/pages/admin/register.dart';
 import 'package:classroom/pages/homepage.dart';
-import 'package:classroom/pages/task.dart';
+import 'package:classroom/pages/task/task.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +16,46 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  String? userName; // Variabel untuk menyimpan nama pengguna
+  String? userNoInduk; // Variabel untuk menyimpan no induk
+  String? userRole; // Variabel untuk menyimpan role pengguna
+  String? userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserData(); // Ambil data pengguna saat halaman dimuat
+  }
+
+  // Fungsi untuk mengambil data pengguna dari Firestore
+  Future<void> _getUserData() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          // Memastikan dokumen ada sebelum mengambil data
+          setState(() {
+            userName = userDoc['name']; // Ambil nama pengguna
+            userNoInduk = userDoc['noInduk']; // Ambil no induk
+            userRole = userDoc['role']; // Ambil role
+            userEmail = userDoc['email'];
+          });
+        } else {
+          print('User document does not exist.');
+        }
+      } else {
+        print('No user is currently signed in.');
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+    }
+  }
+
   Future<void> _logout() async {
     try {
       await FirebaseAuth.instance.signOut(); // Logout dari Firebase
@@ -30,32 +68,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error logging out: $e')),
       );
-    }
-  }
-
-  String? userRole; // Variabel untuk menyimpan role pengguna
-
-  @override
-  void initState() {
-    super.initState();
-    _getUserRole(); // Ambil role pengguna saat halaman dimuat
-  }
-
-  // Fungsi untuk mengambil role pengguna dari Firestore
-  Future<void> _getUserRole() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-        setState(() {
-          userRole = userDoc['role']; // Asumsikan 'role' disimpan di field ini
-        });
-      }
-    } catch (e) {
-      print('Error fetching user role: $e');
     }
   }
 
@@ -195,14 +207,15 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 90),
+            padding: const EdgeInsets.only(top: 100), // Mengurangi jarak
             child: Container(
-              width: 300,
+              width: 350,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Lorem Ipsum',
+                    userName ??
+                        'Loading...', // Tampilkan nama pengguna atau 'Loading...'
                     style: TextStyle(
                         fontFamily: 'poppins',
                         fontSize: 20,
@@ -210,7 +223,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   Divider(),
                   Text(
-                    '431111111',
+                    userNoInduk ??
+                        'Loading...', // Tampilkan no induk atau 'Loading...'
                     style: TextStyle(
                         fontFamily: 'poppins',
                         fontSize: 20,
@@ -218,7 +232,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   Divider(),
                   Text(
-                    'Teknologi Rekayasa',
+                    userRole ??
+                        'Loading...', // Tampilkan role atau 'Loading...'
                     style: TextStyle(
                         fontFamily: 'poppins',
                         fontSize: 20,
@@ -226,7 +241,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   Divider(),
                   Text(
-                    'Lorem Ipsum',
+                    userEmail ??
+                        'Loading...', // Tampilkan role atau 'Loading...'
                     style: TextStyle(
                         fontFamily: 'poppins',
                         fontSize: 20,

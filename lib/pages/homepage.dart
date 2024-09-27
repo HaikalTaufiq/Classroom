@@ -2,7 +2,7 @@ import 'package:classroom/pages/admin/register.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Tambahkan ini untuk Firestore
 import 'package:classroom/main.dart';
 import 'package:classroom/pages/profile.dart';
-import 'package:classroom/pages/task.dart';
+import 'package:classroom/pages/task/task.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 

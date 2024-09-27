@@ -17,6 +17,10 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController confirmpassController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
 
+  // New controllers for Nama and No Induk
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController noIndukController = TextEditingController();
+
   bool _isObscure = true;
   bool _isObscure2 = true;
 
@@ -58,6 +62,81 @@ class _RegisterPageState extends State<RegisterPage> {
                       ],
                     ),
                     const SizedBox(height: 20),
+
+                    // New input for Nama
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text(
+                        'Nama',
+                        style: TextStyle(
+                          fontFamily: 'poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 320,
+                      height: 57,
+                      margin: const EdgeInsets.only(top: 10),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        color: Color(0xffEBFDFC),
+                      ),
+                      child: TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                        ),
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return "Nama cannot be empty";
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // New input for No Induk
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text(
+                        'No Induk',
+                        style: TextStyle(
+                          fontFamily: 'poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 320,
+                      height: 57,
+                      margin: const EdgeInsets.only(top: 10),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        color: Color(0xffEBFDFC),
+                      ),
+                      child: TextFormField(
+                        controller: noIndukController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                        ),
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return "No Induk cannot be empty";
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
                     // Email Input
                     const Padding(
                       padding: EdgeInsets.only(left: 8),
@@ -99,6 +178,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
+
                     // Password Input
                     const Padding(
                       padding: EdgeInsets.only(left: 8, top: 10),
@@ -149,6 +229,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
+
                     // Confirm Password Input
                     const Padding(
                       padding: EdgeInsets.only(left: 8, top: 10),
@@ -197,6 +278,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
+
                     // Dropdown untuk Role
                     const Padding(
                       padding: EdgeInsets.only(left: 8, top: 10),
@@ -259,6 +341,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
 
                     const SizedBox(height: 30),
+
                     // Register Button
                     ElevatedButton(
                       onPressed: () {
@@ -266,8 +349,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           setState(() {
                             showProgress = true;
                           });
-                          signUp(emailController.text, passwordController.text,
-                              role);
+                          signUp(
+                            emailController.text,
+                            passwordController.text,
+                            role,
+                            nameController.text,
+                            noIndukController.text,
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -299,19 +387,21 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  void signUp(String email, String password, String role) async {
+  void signUp(String email, String password, String role, String name,
+      String studentId) async {
     if (_formkey.currentState!.validate()) {
       try {
         await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
-        postDetailsToFirestore(email, role);
+        postDetailsToFirestore(email, role, name, studentId);
       } catch (e) {
         print(e);
       }
     }
   }
 
-  postDetailsToFirestore(String email, String role) async {
+  postDetailsToFirestore(
+      String email, String role, String name, String noInduk) async {
     // Call Firestore to add user data
     FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
 
@@ -319,6 +409,8 @@ class _RegisterPageState extends State<RegisterPage> {
     await firebaseFirestore.collection("users").doc(user!.uid).set({
       'email': email,
       'role': role,
+      'name': name,
+      'noInduk': noInduk,
     }).then((value) {
       Navigator.pushReplacement(
         context,

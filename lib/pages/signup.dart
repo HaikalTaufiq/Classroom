@@ -20,6 +20,11 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmpassController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController nameController =
+      TextEditingController(); // Controller untuk Nama
+  final TextEditingController noIndukController =
+      TextEditingController(); // Controller untuk No Induk
+
   bool _isObscure = true;
   bool _isObscure2 = true;
   File? file;
@@ -57,6 +62,94 @@ class _SignUpState extends State<SignUp> {
                       ],
                     ),
                     const SizedBox(height: 20),
+
+                    // Input untuk Nama
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.only(left: 8),
+                          child: Text(
+                            'Nama',
+                            style: TextStyle(
+                              fontFamily: 'poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      width: 320,
+                      height: 57,
+                      margin: const EdgeInsets.only(top: 10),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        color: Color(0xffEBFDFC),
+                      ),
+                      child: TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                        ),
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return "Nama tidak boleh kosong";
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Input untuk No Induk
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: const [
+                        Padding(
+                          padding: EdgeInsets.only(left: 8),
+                          child: Text(
+                            'No Induk',
+                            style: TextStyle(
+                              fontFamily: 'poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      width: 320,
+                      height: 57,
+                      margin: const EdgeInsets.only(top: 10),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        color: Color(0xffEBFDFC),
+                      ),
+                      child: TextFormField(
+                        controller: noIndukController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                        ),
+                        validator: (value) {
+                          if (value!.isEmpty) {
+                            return "No Induk tidak boleh kosong";
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Input untuk Email
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: const [
@@ -264,7 +357,8 @@ class _SignUpState extends State<SignUp> {
       try {
         await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
-        postDetailsToFirestore(email);
+        postDetailsToFirestore(email, nameController.text,
+            noIndukController.text); // Pass Nama dan No Induk
       } catch (e) {
         // Handle error if needed
       } finally {
@@ -275,11 +369,16 @@ class _SignUpState extends State<SignUp> {
     }
   }
 
-  postDetailsToFirestore(String email) async {
+  postDetailsToFirestore(String email, String name, String noInduk) async {
     FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
     var user = _auth.currentUser;
     CollectionReference ref = firebaseFirestore.collection('users');
-    ref.doc(user!.uid).set({'email': email, 'role': 'Student'});
+    ref.doc(user!.uid).set({
+      'email': email,
+      'name': name, // Simpan Nama
+      'noInduk': noInduk, // Simpan No Induk
+      'role': 'Student'
+    });
     Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => LoginPage()));
   }
