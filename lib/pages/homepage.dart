@@ -224,132 +224,134 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK12()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95EE9E),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK12",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MK12()));
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xff95EE9E),
+                    borderRadius:
+                        BorderRadius.circular(20), // Set the border radius
+                  ),
+                  height: 200, // Adjust height as needed for the content
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10, left: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                "Biology/MK12",
+                                style: TextStyle(
+                                  fontFamily: 'poppins',
+                                  fontSize: 30, // Adjust text size as needed
+                                  fontWeight: FontWeight
+                                      .w800, // Optional: make the text bold
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK13()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95D9EE),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK13",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MK13()));
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xff95D9EE),
+                    borderRadius:
+                        BorderRadius.circular(20), // Set the border radius
+                  ),
+                  height: 200, // Adjust height as needed for the content
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10, left: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                "Biology/MK13",
+                                style: TextStyle(
+                                  fontFamily: 'poppins',
+                                  fontSize: 30, // Adjust text size as needed
+                                  fontWeight: FontWeight
+                                      .w800, // Optional: make the text bold
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK14()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xffEEAA95),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK14",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MK14()));
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xffEEAA95),
+                    borderRadius:
+                        BorderRadius.circular(20), // Set the border radius
+                  ),
+                  height: 200, // Adjust height as needed for the content
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 10, left: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                "Biology/MK14",
+                                style: TextStyle(
+                                  fontFamily: 'poppins',
+                                  fontSize: 30, // Adjust text size as needed
+                                  fontWeight: FontWeight
+                                      .w800, // Optional: make the text bold
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          )
-        ],
+            )
+          ],
+        ),
       ),
     );
   }

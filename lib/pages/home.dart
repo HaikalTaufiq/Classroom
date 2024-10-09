@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Tambahkan ini untuk Fi
 import 'package:classroom/main.dart';
 import 'package:classroom/pages/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
@@ -24,11 +25,44 @@ class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> _scaffoldKey =
       GlobalKey<ScaffoldState>(); // Menambahkan GlobalKey
   String? userRole; // Variabel untuk menyimpan role pengguna
+  final TextEditingController _controller = TextEditingController();
+  List<String> _dataList = ['Homepage', 'Profile'];
+  List<String> _filteredList = [];
+  bool _isDropdownVisible = false;
 
   @override
   void initState() {
     super.initState();
     _getUserRole(); // Ambil role pengguna saat halaman dimuat
+    _isDropdownVisible = false;
+  }
+
+  void _filterList(String query) {
+    setState(() {
+      _filteredList = _dataList
+          .where((item) => item.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+      _isDropdownVisible =
+          _filteredList.isNotEmpty; // Show dropdown if list is not empty
+    });
+  }
+
+  void _navigateToPage(String page) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) {
+        switch (page) {
+          case 'Homepage':
+            return const HomePage();
+          case 'Profile':
+            return const ProfilePage();
+          default:
+            return const Scaffold(
+              body: Center(child: Text('Page not found')),
+            );
+        }
+      }),
+    );
   }
 
   // Fungsi untuk mengambil role pengguna dari Firestore
@@ -240,256 +274,293 @@ class _HomeState extends State<Home> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Color(0xffECF1ED),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            width: 380,
-            height: 50,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 25, right: 25),
-                  child: Text(
-                    "Search",
-                    style: TextStyle(
-                      fontFamily: "Poppins",
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.search),
-                ),
-              ],
-            ),
-          ),
-          if (userRole == 'Student')
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Course(),
-                    ));
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isDropdownVisible = false;
+                  });
+                },
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color(0xffE8F9F8),
-                    borderRadius:
-                        BorderRadius.circular(20), // Set the border radius
+                    borderRadius: BorderRadius.circular(30),
+                    color: Color(
+                        0xffECF1ED), // Background color for the search bar
                   ),
-                  height: 150, // Adjust height as needed for the content
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Course",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 25, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w800, // Optional: make the text bold
-                                ),
-                              ),
-                              Text(
-                                "Student Course",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 15, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w400, // Optional: make the text bold
-                                ),
-                              ),
-                            ],
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          onChanged: _filterList,
+                          decoration: InputDecoration(
+                            hintText: 'Search', // Hint text instead of label
+                            hintStyle: TextStyle(
+                                color: Colors.black), // Style for hint text
+                            border: InputBorder.none, // Remove the border
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 15), // Padding inside the TextField
                           ),
-                        ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 20),
+                        child: Icon(Icons.search),
+                      ), // Ikon pencarian
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                height: _isDropdownVisible ? 150 : 0,
+                curve: Curves.easeIn,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: _filteredList.map((item) {
+                      return ListTile(
+                        title: Text(item),
+                        onTap: () {
+                          _navigateToPage(
+                              item); // Navigate to the selected page
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+            if (userRole == 'Student')
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Course(),
+                      ));
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xffE8F9F8),
+                      borderRadius:
+                          BorderRadius.circular(20), // Set the border radius
+                    ),
+                    height: 150, // Adjust height as needed for the content
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Course",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 25, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w800, // Optional: make the text bold
+                                  ),
+                                ),
+                                Text(
+                                  "Student Course",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 15, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w400, // Optional: make the text bold
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          if (userRole == 'Teacher' || userRole == 'Admin')
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Student(),
-                    ));
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xffE8F9F8),
-                    borderRadius:
-                        BorderRadius.circular(20), // Set the border radius
-                  ),
-                  height: 150, // Adjust height as needed for the content
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Student",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 25, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w800, // Optional: make the text bold
+            if (userRole == 'Teacher' || userRole == 'Admin')
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Student(),
+                      ));
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xffE8F9F8),
+                      borderRadius:
+                          BorderRadius.circular(20), // Set the border radius
+                    ),
+                    height: 150, // Adjust height as needed for the content
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Student",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 25, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w800, // Optional: make the text bold
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                "Online Student Data",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 15, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w400, // Optional: make the text bold
+                                Text(
+                                  "Online Student Data",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 15, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w400, // Optional: make the text bold
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          if (userRole == 'Admin')
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Teacher(),
-                    ));
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xffF9E8E8),
-                    borderRadius:
-                        BorderRadius.circular(20), // Set the border radius
-                  ),
-                  height: 150, // Adjust height as needed for the content
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Teacher",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 25, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w800, // Optional: make the text bold
+            if (userRole == 'Admin')
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Teacher(),
+                      ));
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xffF9E8E8),
+                      borderRadius:
+                          BorderRadius.circular(20), // Set the border radius
+                    ),
+                    height: 150, // Adjust height as needed for the content
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Teacher",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 25, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w800, // Optional: make the text bold
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                "Online Teacher Data",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 15, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w400, // Optional: make the text bold
+                                Text(
+                                  "Online Teacher Data",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 15, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w400, // Optional: make the text bold
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          if (userRole == 'Teacher' || userRole == 'Admin')
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomePage(),
-                    ));
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Color(0xffF9E8E8),
-                    borderRadius:
-                        BorderRadius.circular(20), // Set the border radius
-                  ),
-                  height: 150, // Adjust height as needed for the content
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Add",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 25, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w800, // Optional: make the text bold
+            if (userRole == 'Teacher')
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomePage(),
+                      ));
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xffF9E8E8),
+                      borderRadius:
+                          BorderRadius.circular(20), // Set the border radius
+                    ),
+                    height: 150, // Adjust height as needed for the content
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Add",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 25, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w800, // Optional: make the text bold
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                "Add Task For Student",
-                                style: TextStyle(
-                                  fontFamily: 'poppins',
-                                  fontSize: 15, // Adjust text size as needed
-                                  fontWeight: FontWeight
-                                      .w400, // Optional: make the text bold
+                                Text(
+                                  "Add Task For Student",
+                                  style: TextStyle(
+                                    fontFamily: 'poppins',
+                                    fontSize: 15, // Adjust text size as needed
+                                    fontWeight: FontWeight
+                                        .w400, // Optional: make the text bold
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
