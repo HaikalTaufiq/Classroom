@@ -1,4 +1,4 @@
-import 'package:classroom/pages/homepage.dart';
+import 'package:classroom/pages/home.dart';
 import 'package:classroom/pages/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
         // Navigate to HomePage after successful login
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => Home()),
         );
       }
     } catch (e) {
@@ -159,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
                     ElevatedButton(
                       onPressed: () => _signInWithEmailAndPassword(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff95D8EE),
+                        backgroundColor: const Color(0xff35C5F4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),

@@ -1,7 +1,9 @@
 import 'package:classroom/main.dart';
 import 'package:classroom/pages/admin/register.dart';
+import 'package:classroom/pages/data/task-data.dart';
+import 'package:classroom/pages/home.dart';
 import 'package:classroom/pages/homepage.dart';
-import 'package:classroom/pages/task/task.dart';
+import 'package:classroom/pages/task/course.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -123,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ListTile(
               title: Text(
-                'Dashboard',
+                'Home Page',
                 style: TextStyle(
                   fontFamily: 'poppins',
                 ),
@@ -131,33 +133,66 @@ class _ProfilePageState extends State<ProfilePage> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          HomePage()), // Ganti TaskPage() dengan nama halaman yang ingin Anda tuju
-                ).then((_) {
-                  Navigator.pop(context); // Menutup drawer setelah navigasi
-                });
+                  MaterialPageRoute(builder: (context) => Home()),
+                );
               },
             ),
-            Divider(),
-            ListTile(
-              title: Text(
-                'Task',
-                style: TextStyle(
-                  fontFamily: 'poppins',
+            if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
+            if (userRole == 'Teacher' || userRole == 'Admin')
+              ListTile(
+                title: Text(
+                  'Add Task',
+                  style: TextStyle(
+                    fontFamily: 'poppins',
+                  ),
                 ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            HomePage()), // Ganti TaskPage() dengan nama halaman yang ingin Anda tuju
+                  ).then((_) {
+                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                  });
+                },
               ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          TaskPage()), // Ganti TaskPage() dengan nama halaman yang ingin Anda tuju
-                ).then((_) {
-                  Navigator.pop(context); // Menutup drawer setelah navigasi
-                });
-              },
-            ),
+            if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
+            if (userRole == 'Teacher' || userRole == 'Admin')
+              ListTile(
+                title: Text(
+                  'Uploaded Task',
+                  style: TextStyle(
+                    fontFamily: 'poppins',
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            TaskData()), // Ganti TaskPage() dengan nama halaman yang ingin Anda tuju
+                  ).then((_) {
+                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                  });
+                },
+              ),
+            if (userRole == 'Student') Divider(),
+            if (userRole == 'Student')
+              ListTile(
+                title: Text(
+                  'Course',
+                  style: TextStyle(
+                    fontFamily: 'poppins',
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Course()),
+                  ); // Menutup drawer
+                },
+              ),
             Divider(),
             ListTile(
               title: Text(
@@ -192,6 +227,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   });
                 },
               ),
+            if (userRole == 'Admin') Divider(),
           ],
         ),
       ),
@@ -209,35 +245,17 @@ class _ProfilePageState extends State<ProfilePage> {
           Padding(
             padding: const EdgeInsets.only(top: 100), // Mengurangi jarak
             child: Container(
-              width: 350,
+              width: 300,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     userName ??
                         'Loading...', // Tampilkan nama pengguna atau 'Loading...'
                     style: TextStyle(
                         fontFamily: 'poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  Divider(),
-                  Text(
-                    userNoInduk ??
-                        'Loading...', // Tampilkan no induk atau 'Loading...'
-                    style: TextStyle(
-                        fontFamily: 'poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  Divider(),
-                  Text(
-                    userRole ??
-                        'Loading...', // Tampilkan role atau 'Loading...'
-                    style: TextStyle(
-                        fontFamily: 'poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800),
                   ),
                   Divider(),
                   Text(
@@ -245,8 +263,26 @@ class _ProfilePageState extends State<ProfilePage> {
                         'Loading...', // Tampilkan role atau 'Loading...'
                     style: TextStyle(
                         fontFamily: 'poppins',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400),
+                  ),
+                  Divider(),
+                  Text(
+                    userRole ??
+                        'Loading...', // Tampilkan role atau 'Loading...'
+                    style: TextStyle(
+                        fontFamily: 'poppins',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400),
+                  ),
+                  Divider(),
+                  Text(
+                    userNoInduk ??
+                        'Loading...', // Tampilkan no induk atau 'Loading...'
+                    style: TextStyle(
+                        fontFamily: 'poppins',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400),
                   ),
                 ],
               ),

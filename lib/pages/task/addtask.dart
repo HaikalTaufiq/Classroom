@@ -13,7 +13,17 @@ class _AddTaskState extends State<AddTask> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _urlController =
+      TextEditingController(); // Controller untuk URL
   DateTime? _selectedDate;
+  String? _selectedCourseCode; // Untuk menyimpan kode mata kuliah yang dipilih
+
+  // List kode mata kuliah
+  final List<String> _courseCodes = [
+    'Biology-MK12',
+    'Biology-MK13',
+    'Biology-MK14'
+  ];
 
   Future<void> _saveTask() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -23,7 +33,9 @@ class _AddTaskState extends State<AddTask> {
         await FirebaseFirestore.instance.collection('tasks').add({
           'title': _titleController.text,
           'description': _descriptionController.text,
+          'url': _urlController.text, // Simpan URL
           'dueDate': _selectedDate,
+          'courseCode': _selectedCourseCode, // Simpan kode mata kuliah
           'userId': user?.uid,
           'createdAt': FieldValue.serverTimestamp(),
         });
@@ -38,6 +50,10 @@ class _AddTaskState extends State<AddTask> {
           SnackBar(content: Text('Error adding task: $e')),
         );
       }
+    } else if (_selectedCourseCode == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please select a course code')),
+      );
     }
   }
 
@@ -61,7 +77,7 @@ class _AddTaskState extends State<AddTask> {
       backgroundColor: const Color(0xffffffff),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.only(left: 35, right: 35),
+          padding: const EdgeInsets.symmetric(horizontal: 35),
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -74,6 +90,7 @@ class _AddTaskState extends State<AddTask> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    // Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
@@ -88,6 +105,8 @@ class _AddTaskState extends State<AddTask> {
                       ],
                     ),
                     const SizedBox(height: 20),
+
+                    // Task Title
                     const Padding(
                       padding: EdgeInsets.only(left: 8),
                       child: Text(
@@ -121,6 +140,8 @@ class _AddTaskState extends State<AddTask> {
                       ),
                     ),
                     const SizedBox(height: 16.0),
+
+                    // Task Description
                     const Padding(
                       padding: EdgeInsets.only(left: 8),
                       child: Text(
@@ -155,6 +176,90 @@ class _AddTaskState extends State<AddTask> {
                       ),
                     ),
                     const SizedBox(height: 16.0),
+
+                    // URL Input
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text(
+                        'URL (optional)',
+                        style: TextStyle(
+                          fontFamily: 'poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        color: Color(0xffEBFDFC),
+                      ),
+                      child: TextFormField(
+                        controller: _urlController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                        ),
+                        validator: (value) {
+                          // Validasi URL jika diisi
+                          if (value != null && value.isNotEmpty) {
+                            final Uri? uri = Uri.tryParse(value);
+                            if (uri == null || !uri.hasScheme) {
+                              return 'Please enter a valid URL';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // Course Code
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text(
+                        'Course Code',
+                        style: TextStyle(
+                          fontFamily: 'poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(14)),
+                        color: Color(0xffEBFDFC),
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedCourseCode,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                        ),
+                        items: _courseCodes.map((String code) {
+                          return DropdownMenuItem<String>(
+                            value: code,
+                            child: Text(code),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedCourseCode = newValue;
+                          });
+                        },
+                        validator: (value) => value == null
+                            ? 'Please select a course code'
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // Due Date
                     Text(
                       _selectedDate == null
                           ? 'No date chosen!'
@@ -187,6 +292,8 @@ class _AddTaskState extends State<AddTask> {
                       ),
                     ),
                     const SizedBox(height: 16.0),
+
+                    // Save Task Button
                     ElevatedButton(
                       onPressed: _saveTask,
                       style: ElevatedButton.styleFrom(
@@ -206,6 +313,7 @@ class _AddTaskState extends State<AddTask> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),

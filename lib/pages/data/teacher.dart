@@ -3,9 +3,7 @@
 import 'package:classroom/pages/admin/register.dart';
 import 'package:classroom/pages/data/task-data.dart';
 import 'package:classroom/pages/home.dart';
-import 'package:classroom/pages/task/per-code/mk12.dart';
-import 'package:classroom/pages/task/per-code/mk13.dart';
-import 'package:classroom/pages/task/per-code/mk14.dart';
+import 'package:classroom/pages/homepage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Tambahkan ini untuk Firestore
 import 'package:classroom/main.dart';
 import 'package:classroom/pages/profile.dart';
@@ -13,14 +11,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class Teacher extends StatefulWidget {
+  const Teacher({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<Teacher> createState() => _TeacherState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _TeacherState extends State<Teacher> {
   final GlobalKey<ScaffoldState> _scaffoldKey =
       GlobalKey<ScaffoldState>(); // Menambahkan GlobalKey
   String? userRole; // Variabel untuk menyimpan role pengguna
@@ -75,7 +73,7 @@ class _HomePageState extends State<HomePage> {
             child: Padding(
               padding: const EdgeInsets.only(top: 15),
               child: Text(
-                'Add Task',
+                'Teacher Data',
                 style: TextStyle(
                   fontFamily: 'poppins',
                   fontSize: 24, // Adjust font size as needed
@@ -163,7 +161,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 onTap: () {
-                  Navigator.pop(context); // Menutup drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  ); // Menutup drawer
                 },
               ),
             if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
@@ -224,132 +225,88 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK12()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95EE9E),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK12",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection(
+                'users') // Koleksi Firestore tempat menyimpan data pengguna
+            .where('role',
+                isEqualTo: 'Teacher') // Mengambil data dengan role 'Student'
+            .snapshots(), // Mendapatkan stream data secara real-time
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+                child: CircularProgressIndicator()); // Tampilkan loading
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Text(
+                'No student data found',
+                style: TextStyle(fontFamily: 'poppins', fontSize: 16),
+              ),
+            ); // Tampilkan pesan jika tidak ada data
+          }
+
+          // Tampilkan data dalam bentuk ListView
+          return Expanded(
+            child: ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                DocumentSnapshot studentDoc = snapshot.data!.docs[index];
+
+                // Ambil data dari setiap dokumen
+                String name = studentDoc['name'];
+                String noInduk = studentDoc['noInduk'];
+
+                return ListTile(
+                  leading: CircleAvatar(
+                    radius: 24, // Ukuran lingkaran profile
+                    child: Icon(
+                      Icons.person, // Icon profile
+                      size: 30,
+                      color: Colors.white,
+                    ),
+                    backgroundColor: Colors.grey, // Warna lingkaran
+                  ),
+                  title: Text(
+                    name,
+                    style: TextStyle(
+                      fontFamily: 'poppins',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK13()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95D9EE),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK13",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  subtitle: Text(
+                    noInduk,
+                    style: TextStyle(
+                      fontFamily: 'poppins',
+                      fontSize: 14,
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK14()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xffEEAA95),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK14",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
+                  trailing: Row(
+                    mainAxisSize:
+                        MainAxisSize.min, // Agar row tidak melebar penuh
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit, // Icon edit
+                          color: Colors.grey,
                         ),
-                      ],
-                    ),
+                        onPressed: () {},
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete, // Icon delete
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ],
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          )
-        ],
+          );
+        },
       ),
     );
   }

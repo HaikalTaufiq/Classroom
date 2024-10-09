@@ -3,9 +3,7 @@
 import 'package:classroom/pages/admin/register.dart';
 import 'package:classroom/pages/data/task-data.dart';
 import 'package:classroom/pages/home.dart';
-import 'package:classroom/pages/task/per-code/mk12.dart';
-import 'package:classroom/pages/task/per-code/mk13.dart';
-import 'package:classroom/pages/task/per-code/mk14.dart';
+import 'package:classroom/pages/homepage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Tambahkan ini untuk Firestore
 import 'package:classroom/main.dart';
 import 'package:classroom/pages/profile.dart';
@@ -13,14 +11,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class Enroll extends StatefulWidget {
+  const Enroll({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<Enroll> createState() => _EnrollPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _EnrollPageState extends State<Enroll> {
   final GlobalKey<ScaffoldState> _scaffoldKey =
       GlobalKey<ScaffoldState>(); // Menambahkan GlobalKey
   String? userRole; // Variabel untuk menyimpan role pengguna
@@ -64,6 +62,60 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Fungsi untuk menampilkan dialog konfirmasi enroll
+  void _showEnrollDialog(String courseCode) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enroll Confirmation'),
+          content: Text('Do you want to enroll in $courseCode?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(), // Tutup dialog
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Tutup dialog
+                _enrollInCourse(courseCode); // Panggil fungsi enroll
+              },
+              child: Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Fungsi untuk menangani proses enroll
+  Future<void> _enrollInCourse(String courseCode) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No user is currently logged in.')),
+      );
+      return;
+    }
+
+    try {
+      // Tambahkan data enroll ke koleksi 'enrollments'
+      await FirebaseFirestore.instance.collection('enrollments').add({
+        'userId': user.uid,
+        'courseCode': courseCode,
+        'enrolledAt': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Successfully enrolled in $courseCode')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error enrolling: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +127,7 @@ class _HomePageState extends State<HomePage> {
             child: Padding(
               padding: const EdgeInsets.only(top: 15),
               child: Text(
-                'Add Task',
+                'Enroll',
                 style: TextStyle(
                   fontFamily: 'poppins',
                   fontSize: 24, // Adjust font size as needed
@@ -87,8 +139,7 @@ class _HomePageState extends State<HomePage> {
           leading: IconButton(
             icon: Icon(Icons.menu), // Hamburger menu icon
             onPressed: () {
-              _scaffoldKey.currentState
-                  ?.openDrawer(); // Menggunakan GlobalKey untuk membuka Drawer
+              _scaffoldKey.currentState?.openDrawer(); // Buka Drawer
             },
           ),
           actions: [
@@ -163,7 +214,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 onTap: () {
-                  Navigator.pop(context); // Menutup drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  ).then((_) {
+                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                  });
                 },
               ),
             if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
@@ -224,132 +280,68 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK12()));
-            },
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildCourseCard("Biology-MK12", Color(0xff95EE9E)),
+            _buildCourseCard("Biology-MK13", Color(0xff95D9EE)),
+            _buildCourseCard("Biology-MK14", Color(0xffEEAA95)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget untuk membangun card kursus
+  Widget _buildCourseCard(String courseCode, Color color) {
+    return GestureDetector(
+      onTap: () {
+        _showEnrollDialog(courseCode);
+      },
+      child: Padding(
+        padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(20), // Set the border radius
+          ),
+          height: 150, // Adjust height as needed for the content
+          child: Center(
             child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95EE9E),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK12",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
+              padding: const EdgeInsets.only(top: 10, left: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        courseCode,
+                        style: TextStyle(
+                          fontFamily: 'poppins',
+                          fontSize: 30, // Adjust text size as needed
+                          fontWeight:
+                              FontWeight.w800, // Optional: make the text bold
                         ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Click to enroll',
+                        style: TextStyle(
+                          fontFamily: 'poppins',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ),
             ),
           ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK13()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95D9EE),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK13",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK14()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xffEEAA95),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK14",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          )
-        ],
+        ),
       ),
     );
   }

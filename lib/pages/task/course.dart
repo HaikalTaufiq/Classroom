@@ -1,37 +1,41 @@
 // ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 
+import 'package:classroom/main.dart';
 import 'package:classroom/pages/admin/register.dart';
 import 'package:classroom/pages/data/task-data.dart';
 import 'package:classroom/pages/home.dart';
+import 'package:classroom/pages/homepage.dart';
+import 'package:classroom/pages/task/enroll.dart';
 import 'package:classroom/pages/task/per-code/mk12.dart';
 import 'package:classroom/pages/task/per-code/mk13.dart';
 import 'package:classroom/pages/task/per-code/mk14.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Tambahkan ini untuk Firestore
-import 'package:classroom/main.dart';
 import 'package:classroom/pages/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class Course extends StatefulWidget {
+  const Course({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<Course> createState() => _CourseState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _CourseState extends State<Course> {
   final GlobalKey<ScaffoldState> _scaffoldKey =
       GlobalKey<ScaffoldState>(); // Menambahkan GlobalKey
   String? userRole; // Variabel untuk menyimpan role pengguna
+  List<String> enrolledCourses =
+      []; // List untuk menyimpan courseCode yang di-enroll
 
   @override
   void initState() {
     super.initState();
     _getUserRole(); // Ambil role pengguna saat halaman dimuat
+    _getEnrolledCourses(); // Ambil data courses yang di-enroll
   }
 
-  // Fungsi untuk mengambil role pengguna dari Firestore
   Future<void> _getUserRole() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
@@ -46,6 +50,26 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('Error fetching user role: $e');
+    }
+  }
+
+  Future<void> _getEnrolledCourses() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        QuerySnapshot enrollmentsSnapshot = await FirebaseFirestore.instance
+            .collection('enrollments')
+            .where('userId', isEqualTo: user.uid)
+            .get();
+
+        setState(() {
+          enrolledCourses = enrollmentsSnapshot.docs
+              .map((doc) => doc['courseCode'] as String)
+              .toList();
+        });
+      }
+    } catch (e) {
+      print('Error fetching enrolled courses: $e');
     }
   }
 
@@ -67,50 +91,47 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Menghubungkan GlobalKey dengan Scaffold
+      key: _scaffoldKey,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80), // Set height of the AppBar
+        preferredSize: Size.fromHeight(80),
         child: AppBar(
           flexibleSpace: Center(
             child: Padding(
               padding: const EdgeInsets.only(top: 15),
               child: Text(
-                'Add Task',
+                'Course',
                 style: TextStyle(
                   fontFamily: 'poppins',
-                  fontSize: 24, // Adjust font size as needed
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ),
           leading: IconButton(
-            icon: Icon(Icons.menu), // Hamburger menu icon
+            icon: Icon(Icons.menu),
             onPressed: () {
-              _scaffoldKey.currentState
-                  ?.openDrawer(); // Menggunakan GlobalKey untuk membuka Drawer
+              _scaffoldKey.currentState?.openDrawer();
             },
           ),
           actions: [
             Padding(
               padding: const EdgeInsets.only(
                 right: 16.0,
-                top: 0, // Adjust top padding as needed
+                top: 0,
               ),
               child: IconButton(
                 icon: Icon(
-                  Icons.person, // Use the desired profile icon
-                  size: 30, // Adjust size as needed
-                  color: Colors.black, // Change color if needed
+                  Icons.person,
+                  size: 30,
+                  color: Colors.black,
                 ),
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            ProfilePage()), // Ganti TaskPage() dengan nama halaman yang ingin Anda tuju
+                    MaterialPageRoute(builder: (context) => ProfilePage()),
                   ).then((_) {
-                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                    Navigator.pop(context);
                   });
                 },
               ),
@@ -148,9 +169,7 @@ class _HomePageState extends State<HomePage> {
               ),
               onTap: () {
                 Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Home()),
-                );
+                    context, MaterialPageRoute(builder: (context) => Home()));
               },
             ),
             if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
@@ -163,7 +182,26 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 onTap: () {
-                  Navigator.pop(context); // Menutup drawer
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => HomePage()),
+                  ); // Menutup drawer
+                },
+              ),
+            if (userRole == 'Student') Divider(),
+            if (userRole == 'Student')
+              ListTile(
+                title: Text(
+                  'Course',
+                  style: TextStyle(
+                    fontFamily: 'poppins',
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Course()),
+                  ); // Menutup drawer
                 },
               ),
             if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
@@ -187,6 +225,7 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             Divider(),
+
             ListTile(
               title: Text(
                 'Log out',
@@ -226,130 +265,116 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Column(
         children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK12()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95EE9E),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK12",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
+          if (enrolledCourses
+              .contains('Biology-MK12')) // Cek jika terdaftar di MK12
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MK12()));
+              },
+              child: buildCourseContainer("Biology/MK12", Color(0xff95EE9E)),
+            ),
+          if (enrolledCourses
+              .contains('Biology-MK13')) // Cek jika terdaftar di MK13
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MK13()));
+              },
+              child: buildCourseContainer("Biology/MK13", Color(0xff95D9EE)),
+            ),
+          if (enrolledCourses
+              .contains('Biology-MK14')) // Cek jika terdaftar di MK14
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => MK14()));
+              },
+              child: buildCourseContainer("Biology/MK14", Color(0xffEEAA95)),
+            ),
+          // Jika pengguna belum terdaftar di manapun
+          if (enrolledCourses.isEmpty) // Jika tidak ada course yang di-enroll
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => Enroll()));
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15, right: 15),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFFC3C1C1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  height: 200,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "No Course",
+                            style: TextStyle(
+                              fontFamily: 'poppins',
+                              fontSize: 30,
+                              fontWeight: FontWeight.w800,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                          Text(
+                            'Click to enroll',
+                            style: TextStyle(
+                              fontFamily: 'poppins',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK13()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xff95D9EE),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK13",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => MK14()));
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xffEEAA95),
-                  borderRadius:
-                      BorderRadius.circular(20), // Set the border radius
-                ),
-                height: 200, // Adjust height as needed for the content
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 10, left: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Biology/MK14",
-                              style: TextStyle(
-                                fontFamily: 'poppins',
-                                fontSize: 30, // Adjust text size as needed
-                                fontWeight: FontWeight
-                                    .w800, // Optional: make the text bold
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          )
         ],
+      ),
+    );
+  }
+
+  // Fungsi untuk membangun tampilan kontainer
+  Widget buildCourseContainer(String courseName, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 15, right: 20, left: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        height: 200,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10, left: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      courseName,
+                      style: TextStyle(
+                        fontFamily: 'poppins',
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
