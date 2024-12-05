@@ -1,5 +1,5 @@
 import 'package:classroom/pages/home.dart';
-import 'package:classroom/pages/signup.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -11,202 +11,193 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController noIndukController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  bool _isObscure = true;
+  bool showProgress = false;
+  String _errorMessage =
+      ''; // Tambahkan variabel untuk menyimpan pesan kesalahan
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  String _errorMessage = '';
-  bool _isObscure = true; // Variable to toggle password visibility
-
-  void _signInWithEmailAndPassword(BuildContext context) async {
-    try {
-      final UserCredential userCredential =
-          await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-      // Check if the userCredential is not null (successful login)
-      if (userCredential.user != null) {
-        setState(() {
-          _errorMessage = '';
-        });
-        print('User logged in successfully: ${userCredential.user!.uid}');
-        // Navigate to HomePage after successful login
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Home()),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Invalid username or password. Please try again.';
-      });
-      print('Failed to sign in with Email & Password: $e');
-    }
-  }
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffffffff),
       body: Center(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 200, left: 35, right: 35),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 100),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Login',
+                  style: TextStyle(
+                    fontFamily: 'poppins',
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Welcome !',
-                          style: TextStyle(
-                            fontFamily: 'poppins',
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Text(
-                            'Account',
-                            style: TextStyle(
-                              fontFamily: 'poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: 320,
-                      height: 57,
-                      margin: const EdgeInsets.only(top: 10),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
-                        color: Color(0xffEBFDFC),
-                      ),
-                      child: TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
-                        ),
+                const SizedBox(height: 20),
+
+                // Input No Induk
+                TextFormField(
+                  controller: noIndukController,
+                  decoration: InputDecoration(
+                    labelText: 'No Induk',
+                    labelStyle: TextStyle(
+                        fontFamily: 'poppins',
+                        color: Color(0xff95D8EE)), // Label dengan warna tombol
+                    filled: true,
+                    fillColor: Color(0xff95D8EE)
+                        .withOpacity(0.2), // Warna dengan opacity
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Color(0xff95D8EE).withOpacity(
+                            0.5), // Border dengan warna tombol dan opacity
                       ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.only(left: 8, top: 10),
-                          child: Text(
-                            'Password',
-                            style: TextStyle(
-                              fontFamily: 'poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: 320,
-                      height: 57,
-                      margin: const EdgeInsets.only(top: 10),
-                      decoration: const BoxDecoration(
-                        color: Color(0xffEBFDFC),
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
-                      ),
-                      child: TextField(
-                        controller: _passwordController,
-                        obscureText: _isObscure, // Use the toggle variable here
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
-                          suffixIcon: IconButton(
-                            icon: Icon(_isObscure
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () {
-                              setState(() {
-                                _isObscure = !_isObscure; // Toggle visibility
-                              });
-                            },
-                          ),
-                        ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'No Induk tidak boleh kosong';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 15),
+
+                // Input Password
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: _isObscure,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    labelStyle: TextStyle(
+                        fontFamily: 'poppins',
+                        color: Color(0xff95D8EE)), // Label dengan warna tombol
+                    filled: true,
+                    fillColor: Color(0xff95D8EE)
+                        .withOpacity(0.2), // Warna dengan opacity
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                        color: Color.fromARGB(255, 27, 115, 144).withOpacity(
+                            0.5), // Border dengan warna tombol dan opacity
                       ),
                     ),
-                    const SizedBox(height: 25),
-                    ElevatedButton(
-                      onPressed: () => _signInWithEmailAndPassword(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff35C5F4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      child: const Text(
-                        'Log In',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontFamily: 'poppins',
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    if (_errorMessage.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Text(
-                          _errorMessage,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    TextButton(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                          _isObscure ? Icons.visibility_off : Icons.visibility),
                       onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignUp()),
-                        );
+                        setState(() {
+                          _isObscure = !_isObscure;
+                        });
                       },
-                      child: const Text(
-                        "Dont have an account? Sign Up",
-                        style: TextStyle(
-                          color: Colors.black54,
-                          fontFamily: 'poppins',
-                          fontSize: 14,
-                        ),
-                      ),
                     ),
-                  ],
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Password tidak boleh kosong';
+                    }
+                    return null;
+                  },
                 ),
-              ),
+                const SizedBox(height: 20),
+
+                // Tampilkan error message
+                if (_errorMessage.isNotEmpty)
+                  Text(
+                    _errorMessage,
+                    style: const TextStyle(
+                      fontFamily: 'poppins',
+                      fontSize: 14,
+                      color: Colors.red,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                const SizedBox(height: 10),
+
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      setState(() {
+                        showProgress = true;
+                        _errorMessage = ''; // Reset pesan error
+                      });
+                      login(noIndukController.text, passwordController.text);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    backgroundColor: const Color(0xff95D8EE),
+                  ),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> login(String noInduk, String password) async {
+    try {
+      // Cari user berdasarkan No Induk
+      QuerySnapshot query = await _firestore
+          .collection('users')
+          .where('noInduk', isEqualTo: noInduk)
+          .get();
+
+      if (query.docs.isEmpty) {
+        setState(() {
+          _errorMessage = 'No Induk tidak ditemukan';
+        });
+        return;
+      }
+
+      // Ambil email dari dokumen pengguna
+      var userDoc = query.docs.first;
+      String email = userDoc['email'];
+
+      // Verifikasi password dengan menggunakan Firebase Authentication
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+
+      // Jika login berhasil, navigasi ke halaman utama
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Home()),
+      );
+    } catch (e) {
+      setState(() {
+        _errorMessage =
+            'No Induk atau Password salah'; // Tampilkan pesan kesalahan
+      });
+    } finally {
+      setState(() {
+        showProgress = false;
+      });
+    }
   }
 }

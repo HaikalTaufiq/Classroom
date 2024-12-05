@@ -4,7 +4,7 @@ import 'package:classroom/pages/admin/register.dart';
 import 'package:classroom/pages/data/task-data.dart';
 import 'package:classroom/pages/home.dart';
 import 'package:classroom/pages/homepage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Tambahkan ini untuk Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classroom/main.dart';
 import 'package:classroom/pages/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,17 +19,15 @@ class Teacher extends StatefulWidget {
 }
 
 class _TeacherState extends State<Teacher> {
-  final GlobalKey<ScaffoldState> _scaffoldKey =
-      GlobalKey<ScaffoldState>(); // Menambahkan GlobalKey
-  String? userRole; // Variabel untuk menyimpan role pengguna
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String? userRole;
 
   @override
   void initState() {
     super.initState();
-    _getUserRole(); // Ambil role pengguna saat halaman dimuat
+    _getUserRole();
   }
 
-  // Fungsi untuk mengambil role pengguna dari Firestore
   Future<void> _getUserRole() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
@@ -39,7 +37,7 @@ class _TeacherState extends State<Teacher> {
             .doc(user.uid)
             .get();
         setState(() {
-          userRole = userDoc['role']; // Asumsikan 'role' disimpan di field ini
+          userRole = userDoc['role'];
         });
       }
     } catch (e) {
@@ -49,11 +47,10 @@ class _TeacherState extends State<Teacher> {
 
   Future<void> _logout() async {
     try {
-      await FirebaseAuth.instance.signOut(); // Logout dari Firebase
+      await FirebaseAuth.instance.signOut();
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-            builder: (context) => HomeScreen()), // Ganti ke HomePage
-        (Route<dynamic> route) => false, // Menghapus semua route sebelumnya
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (Route<dynamic> route) => false,
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,12 +59,25 @@ class _TeacherState extends State<Teacher> {
     }
   }
 
+  Future<void> _deleteUser(String userId) async {
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(userId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting user: ${e.toString()}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Menghubungkan GlobalKey dengan Scaffold
+      key: _scaffoldKey,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80), // Set height of the AppBar
+        preferredSize: Size.fromHeight(80),
         child: AppBar(
           flexibleSpace: Center(
             child: Padding(
@@ -76,39 +86,33 @@ class _TeacherState extends State<Teacher> {
                 'Teacher Data',
                 style: TextStyle(
                   fontFamily: 'poppins',
-                  fontSize: 24, // Adjust font size as needed
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
           ),
           leading: IconButton(
-            icon: Icon(Icons.menu), // Hamburger menu icon
+            icon: Icon(Icons.menu),
             onPressed: () {
-              _scaffoldKey.currentState
-                  ?.openDrawer(); // Menggunakan GlobalKey untuk membuka Drawer
+              _scaffoldKey.currentState?.openDrawer();
             },
           ),
           actions: [
             Padding(
-              padding: const EdgeInsets.only(
-                right: 16.0,
-                top: 0, // Adjust top padding as needed
-              ),
+              padding: const EdgeInsets.only(right: 16.0),
               child: IconButton(
                 icon: Icon(
-                  Icons.person, // Use the desired profile icon
-                  size: 30, // Adjust size as needed
-                  color: Colors.black, // Change color if needed
+                  Icons.person,
+                  size: 30,
+                  color: Colors.black,
                 ),
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            ProfilePage()), // Ganti TaskPage() dengan nama halaman yang ingin Anda tuju
+                    MaterialPageRoute(builder: (context) => ProfilePage()),
                   ).then((_) {
-                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                    Navigator.pop(context);
                   });
                 },
               ),
@@ -121,7 +125,7 @@ class _TeacherState extends State<Teacher> {
           padding: EdgeInsets.zero,
           children: <Widget>[
             Container(
-              height: 100, // Atur tinggi sesuai kebutuhan
+              height: 100,
               child: DrawerHeader(
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(255, 143, 205, 255),
@@ -151,8 +155,8 @@ class _TeacherState extends State<Teacher> {
                 );
               },
             ),
-            if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
-            if (userRole == 'Teacher' || userRole == 'Admin')
+            if (userRole == 'Teacher') Divider(),
+            if (userRole == 'Teacher')
               ListTile(
                 title: Text(
                   'Add Task',
@@ -164,11 +168,11 @@ class _TeacherState extends State<Teacher> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => HomePage()),
-                  ); // Menutup drawer
+                  );
                 },
               ),
-            if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
-            if (userRole == 'Teacher' || userRole == 'Admin')
+            if (userRole == 'Teacher') Divider(),
+            if (userRole == 'Teacher')
               ListTile(
                 title: Text(
                   'Uploaded Task',
@@ -179,29 +183,13 @@ class _TeacherState extends State<Teacher> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            TaskData()), // Ganti TaskPage() dengan nama halaman yang ingin Anda tuju
+                    MaterialPageRoute(builder: (context) => TaskData()),
                   ).then((_) {
-                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                    Navigator.pop(context);
                   });
                 },
               ),
             Divider(),
-            ListTile(
-              title: Text(
-                'Log out',
-                style: TextStyle(
-                  fontFamily: 'poppins',
-                ),
-              ),
-              onTap: () {
-                Navigator.pop(context); // Menutup drawer
-                _logout(); // Memanggil fungsi logout
-              },
-            ),
-            Divider(),
-            // Tampilkan opsi Register hanya jika userRole adalah 'admin'
             if (userRole == 'Admin')
               ListTile(
                 title: Text(
@@ -213,59 +201,70 @@ class _TeacherState extends State<Teacher> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            RegisterPage()), // Arahkan ke halaman registrasi
+                    MaterialPageRoute(builder: (context) => RegisterPage()),
                   ).then((_) {
-                    Navigator.pop(context); // Menutup drawer setelah navigasi
+                    Navigator.pop(context);
                   });
                 },
               ),
             if (userRole == 'Admin') Divider(),
+            ListTile(
+              title: Text(
+                'Log out',
+                style: TextStyle(
+                  fontFamily: 'poppins',
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _logout();
+              },
+            ),
+            Divider(),
           ],
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection(
-                'users') // Koleksi Firestore tempat menyimpan data pengguna
-            .where('role',
-                isEqualTo: 'Teacher') // Mengambil data dengan role 'Student'
-            .snapshots(), // Mendapatkan stream data secara real-time
+            .collection('users')
+            .where('role', isEqualTo: 'Teacher')
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-                child: CircularProgressIndicator()); // Tampilkan loading
+            return Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(
               child: Text(
-                'No student data found',
+                'No teacher data found',
                 style: TextStyle(fontFamily: 'poppins', fontSize: 16),
               ),
-            ); // Tampilkan pesan jika tidak ada data
+            );
           }
 
-          // Tampilkan data dalam bentuk ListView
-          return Expanded(
-            child: ListView.builder(
-              itemCount: snapshot.data!.docs.length,
-              itemBuilder: (context, index) {
-                DocumentSnapshot studentDoc = snapshot.data!.docs[index];
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              DocumentSnapshot studentDoc = snapshot.data!.docs[index];
 
-                // Ambil data dari setiap dokumen
-                String name = studentDoc['name'];
-                String noInduk = studentDoc['noInduk'];
+              String name = studentDoc['name'];
+              String noInduk = studentDoc['noInduk'];
 
-                return ListTile(
+              return Container(
+                decoration: BoxDecoration(
+                  color: Color(0xffE8E9E7),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: ListTile(
                   leading: CircleAvatar(
-                    radius: 24, // Ukuran lingkaran profile
+                    radius: 24,
                     child: Icon(
-                      Icons.person, // Icon profile
+                      Icons.person,
                       size: 30,
                       color: Colors.white,
                     ),
-                    backgroundColor: Colors.grey, // Warna lingkaran
+                    backgroundColor: Colors.grey,
                   ),
                   title: Text(
                     name,
@@ -283,28 +282,43 @@ class _TeacherState extends State<Teacher> {
                     ),
                   ),
                   trailing: Row(
-                    mainAxisSize:
-                        MainAxisSize.min, // Agar row tidak melebar penuh
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: Icon(
-                          Icons.edit, // Icon edit
-                          color: Colors.grey,
-                        ),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete, // Icon delete
-                          color: Colors.grey,
-                        ),
-                        onPressed: () {},
+                        icon: Icon(Icons.delete, color: Colors.black),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text('Delete User'),
+                                content: Text(
+                                    'Are you sure you want to delete this user?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      String userId = studentDoc.id;
+                                      await _deleteUser(userId);
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('Delete'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           );
         },
       ),

@@ -58,7 +58,11 @@ class _HomeState extends State<Home> {
             return const ProfilePage();
           default:
             return const Scaffold(
-              body: Center(child: Text('Page not found')),
+              body: Center(
+                  child: Text(
+                'Page not found',
+                style: TextStyle(fontFamily: 'Poppins'),
+              )),
             );
         }
       }),
@@ -184,8 +188,8 @@ class _HomeState extends State<Home> {
                 Navigator.pop(context);
               },
             ),
-            if (userRole == 'Admin' || userRole == 'Teacher') Divider(),
-            if (userRole == 'Admin' || userRole == 'Teacher')
+            if (userRole == 'Teacher') Divider(),
+            if (userRole == 'Teacher')
               ListTile(
                 title: Text(
                   'Add Task',
@@ -216,8 +220,8 @@ class _HomeState extends State<Home> {
                   ); // Menutup drawer
                 },
               ),
-            if (userRole == 'Teacher' || userRole == 'Admin') Divider(),
-            if (userRole == 'Teacher' || userRole == 'Admin')
+            if (userRole == 'Teacher') Divider(),
+            if (userRole == 'Teacher')
               ListTile(
                 title: Text(
                   'Uploaded Task',
@@ -322,7 +326,7 @@ class _HomeState extends State<Home> {
               padding: const EdgeInsets.only(left: 20, right: 20),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                height: _isDropdownVisible ? 150 : 0,
+                height: _isDropdownVisible ? 100 : 0,
                 curve: Curves.easeIn,
                 child: SingleChildScrollView(
                   child: Column(

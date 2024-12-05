@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
         child: AppBar(
           flexibleSpace: Center(
             child: Padding(
-              padding: const EdgeInsets.only(top: 15),
+              padding: const EdgeInsets.only(top: 0),
               child: Text(
                 'Add Task',
                 style: TextStyle(

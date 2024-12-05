@@ -79,6 +79,11 @@ class _EnrollPageState extends State<Enroll> {
               onPressed: () {
                 Navigator.of(context).pop(); // Tutup dialog
                 _enrollInCourse(courseCode); // Panggil fungsi enroll
+                // Pindah ke halaman Home
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => Home()),
+                );
               },
               child: Text('Yes'),
             ),

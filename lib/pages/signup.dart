@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:classroom/pages/loginpage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,14 +18,11 @@ class _SignUpState extends State<SignUp> {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmpassController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController nameController =
-      TextEditingController(); // Controller untuk Nama
-  final TextEditingController noIndukController =
-      TextEditingController(); // Controller untuk No Induk
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController noIndukController = TextEditingController();
 
   bool _isObscure = true;
   bool _isObscure2 = true;
-  File? file;
 
   @override
   Widget build(BuildContext context) {
@@ -62,241 +57,22 @@ class _SignUpState extends State<SignUp> {
                       ],
                     ),
                     const SizedBox(height: 20),
-
-                    // Input untuk Nama
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Text(
-                            'Nama',
-                            style: TextStyle(
-                              fontFamily: 'poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: 320,
-                      height: 57,
-                      margin: const EdgeInsets.only(top: 10),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
-                        color: Color(0xffEBFDFC),
-                      ),
-                      child: TextFormField(
-                        controller: nameController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Nama tidak boleh kosong";
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-
+                    _buildInputField('Nama', nameController),
                     const SizedBox(height: 10),
-
-                    // Input untuk No Induk
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Text(
-                            'No Induk',
-                            style: TextStyle(
-                              fontFamily: 'poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: 320,
-                      height: 57,
-                      margin: const EdgeInsets.only(top: 10),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
-                        color: Color(0xffEBFDFC),
-                      ),
-                      child: TextFormField(
-                        controller: noIndukController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "No Induk tidak boleh kosong";
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-
+                    _buildInputField('No Induk', noIndukController),
                     const SizedBox(height: 10),
-
-                    // Input untuk Email
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.only(left: 8),
-                          child: Text(
-                            'Email',
-                            style: TextStyle(
-                              fontFamily: 'poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
+                    _buildInputField(
+                      'Email',
+                      emailController,
+                      isEmail: true,
                     ),
-                    Container(
-                      width: 320,
-                      height: 57,
-                      margin: const EdgeInsets.only(top: 10),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
-                        color: Color(0xffEBFDFC),
-                      ),
-                      child: TextFormField(
-                        controller: emailController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Email cannot be empty";
-                          }
-                          if (!RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]")
-                              .hasMatch(value)) {
-                            return "Please enter a valid email";
-                          }
-                          return null;
-                        },
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.only(left: 8, top: 10),
-                          child: Text(
-                            'Password',
-                            style: TextStyle(
-                              fontFamily: 'poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: 320,
-                      height: 57,
-                      margin: const EdgeInsets.only(top: 10),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
-                        color: Color(0xffEBFDFC),
-                      ),
-                      child: TextFormField(
-                        controller: passwordController,
-                        obscureText: _isObscure,
-                        decoration: InputDecoration(
-                          suffixIcon: IconButton(
-                            icon: Icon(_isObscure
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () {
-                              setState(() {
-                                _isObscure = !_isObscure;
-                              });
-                            },
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return "Password cannot be empty";
-                          }
-                          if (value.length < 6) {
-                            return "Please enter a valid password with at least 6 characters";
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.only(left: 8, top: 10),
-                          child: Text(
-                            'Confirm Password',
-                            style: TextStyle(
-                              fontFamily: 'poppins',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      width: 320,
-                      height: 57,
-                      margin: const EdgeInsets.only(top: 10),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(14)),
-                        color: Color(0xffEBFDFC),
-                      ),
-                      child: TextFormField(
-                        controller: confirmpassController,
-                        obscureText: _isObscure2,
-                        decoration: InputDecoration(
-                          suffixIcon: IconButton(
-                            icon: Icon(_isObscure2
-                                ? Icons.visibility_off
-                                : Icons.visibility),
-                            onPressed: () {
-                              setState(() {
-                                _isObscure2 = !_isObscure2;
-                              });
-                            },
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 20),
-                        ),
-                        validator: (value) {
-                          if (confirmpassController.text !=
-                              passwordController.text) {
-                            return "Passwords do not match";
-                          }
-                          return null;
-                        },
-                      ),
+                    const SizedBox(height: 10),
+                    _buildPasswordField('Password', passwordController),
+                    const SizedBox(height: 10),
+                    _buildPasswordField(
+                      'Confirm Password',
+                      confirmpassController,
+                      confirm: true,
                     ),
                     const SizedBox(height: 25),
                     ElevatedButton(
@@ -352,34 +128,164 @@ class _SignUpState extends State<SignUp> {
     );
   }
 
+  Widget _buildInputField(String label, TextEditingController controller,
+      {bool isEmail = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Container(
+          width: 360,
+          height: 57,
+          margin: const EdgeInsets.only(top: 10),
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            color: Color(0xffEBFDFC),
+          ),
+          child: TextFormField(
+            controller: controller,
+            keyboardType:
+                isEmail ? TextInputType.emailAddress : TextInputType.text,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            ),
+            validator: (value) {
+              if (value!.isEmpty) {
+                return "$label tidak boleh kosong";
+              }
+              if (isEmail &&
+                  !RegExp("^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+.[a-z]")
+                      .hasMatch(value)) {
+                return "Masukkan email yang valid";
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField(String label, TextEditingController controller,
+      {bool confirm = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'poppins',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Container(
+          width: 360,
+          height: 57,
+          margin: const EdgeInsets.only(top: 10),
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            color: Color(0xffEBFDFC),
+          ),
+          child: TextFormField(
+            controller: controller,
+            obscureText: confirm ? _isObscure2 : _isObscure,
+            decoration: InputDecoration(
+              suffixIcon: IconButton(
+                icon: Icon(confirm
+                    ? (_isObscure2 ? Icons.visibility_off : Icons.visibility)
+                    : (_isObscure ? Icons.visibility_off : Icons.visibility)),
+                onPressed: () {
+                  setState(() {
+                    if (confirm) {
+                      _isObscure2 = !_isObscure2;
+                    } else {
+                      _isObscure = !_isObscure;
+                    }
+                  });
+                },
+              ),
+              border: InputBorder.none,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            ),
+            validator: (value) {
+              if (value!.isEmpty) {
+                return "$label tidak boleh kosong";
+              }
+              if (!confirm && value.length < 3) {
+                return "Password minimal 3 karakter";
+              }
+              if (confirm && value != passwordController.text) {
+                return "Password tidak cocok";
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   void signUp(String email, String password) async {
     if (_formkey.currentState!.validate()) {
       try {
         await _auth.createUserWithEmailAndPassword(
-            email: email, password: password);
-        postDetailsToFirestore(email, nameController.text,
-            noIndukController.text); // Pass Nama dan No Induk
-      } catch (e) {
-        // Handle error if needed
-      } finally {
+          email: email,
+          password: password,
+        );
+        await postDetailsToFirestore(
+          email,
+          nameController.text,
+          noIndukController.text,
+        );
         setState(() {
           showProgress = false;
         });
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          showProgress = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message ?? "Terjadi kesalahan")),
+        );
       }
     }
   }
 
-  postDetailsToFirestore(String email, String name, String noInduk) async {
+  Future<void> postDetailsToFirestore(
+      String email, String name, String noInduk) async {
     FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
     var user = _auth.currentUser;
-    CollectionReference ref = firebaseFirestore.collection('users');
-    ref.doc(user!.uid).set({
-      'email': email,
-      'name': name, // Simpan Nama
-      'noInduk': noInduk, // Simpan No Induk
-      'role': 'Student'
-    });
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => LoginPage()));
+
+    if (user != null) {
+      await firebaseFirestore.collection('users').doc(user.uid).set({
+        'email': email,
+        'name': name,
+        'noInduk': noInduk,
+        'role': 'Student',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
+    }
   }
 }

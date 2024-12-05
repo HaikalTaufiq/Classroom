@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+
 import 'dart:io';
 
 import 'package:classroom/main.dart';
@@ -15,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class MK13 extends StatefulWidget {
   const MK13({super.key});
@@ -27,6 +30,7 @@ class _TaskPageState extends State<MK13> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<bool> _isExpandedList = [];
   String? userRole;
+  String? userNoInduk;
   String? fileName;
   String? userName;
   String? filePath;
@@ -41,7 +45,6 @@ class _TaskPageState extends State<MK13> {
   }
 
   void saveChanges() async {
-    // Pastikan kita memiliki userName sebelum mengupload file
     if (userName == null) {
       await _getUserData(); // Ambil data pengguna jika belum ada
     }
@@ -61,15 +64,12 @@ class _TaskPageState extends State<MK13> {
       // Buat referensi untuk file yang akan diupload
       final fileRef = storageRef.child('uploads/$fileName');
 
-      // Upload file
       try {
-        // Menggunakan path file yang dipilih
         await fileRef.putFile(File(filePath!));
 
-        // Ambil URL download dari file yang diupload
         String downloadURL = await fileRef.getDownloadURL();
 
-        // Simpan data ke Firestore setelah upload berhasil
+        // Menambahkan field grade dengan nilai default "-"
         DocumentReference docRef =
             await FirebaseFirestore.instance.collection('uploads').add({
           'userId': userId, // Tambahkan userId
@@ -79,6 +79,9 @@ class _TaskPageState extends State<MK13> {
           'title': selectedTaskTitle, // Gunakan title dari task yang dipilih
           'fileURL': downloadURL, // Simpan URL file
           'filePath': 'uploads/$fileName', // Simpan filePath
+          'grade': '-', // Menambahkan field grade dengan nilai default "-"
+          'code': 'MK-13',
+          'noInduk': userNoInduk,
         });
 
         // Ambil data uploadTime dari Firestore
@@ -131,6 +134,7 @@ class _TaskPageState extends State<MK13> {
           setState(() {
             userName = userDoc['name']; // Ambil nama pengguna
             userRole = userDoc['role']; // Ambil role
+            userNoInduk = userDoc['noInduk']; // Ambil ID
           });
         } else {
           print('User document does not exist.');
@@ -416,47 +420,63 @@ class _TaskPageState extends State<MK13> {
           }
 
           return StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('uploads')
-                  .where('userId',
-                      isEqualTo: FirebaseAuth.instance.currentUser!.uid)
-                  .snapshots(),
-              builder: (context, uploadSnapshot) {
-                if (uploadSnapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
+            stream: FirebaseFirestore.instance
+                .collection('uploads')
+                .where('userId',
+                    isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                .snapshots(),
+            builder: (context, uploadSnapshot) {
+              if (uploadSnapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-                if (uploadSnapshot.hasError) {
-                  return Center(
-                      child: Text(
-                          'Error fetching uploads: ${uploadSnapshot.error}'));
-                }
+              if (uploadSnapshot.hasError) {
+                return Center(
+                    child: Text(
+                        'Error fetching uploads: ${uploadSnapshot.error}'));
+              }
 
-                // Ambil semua upload dari pengguna saat ini
-                final uploads = uploadSnapshot.data!.docs;
-                final uploadedTitles =
-                    uploads.map((doc) => doc['title'] as String).toSet();
-                return ListView.builder(
-                  padding: EdgeInsets.all(20),
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index].data() as Map<String, dynamic>;
-                    final taskId = tasks[index].id; // Dapatkan ID dokumen
-                    final String? url = task['url'];
-                    String title = task['title'] ??
-                        'No Title'; // Ambil title dari data task
+              final uploads = uploadSnapshot.data!.docs;
+              // Map 'title' to its corresponding grade and fileURL
+              final uploadData = {
+                for (var doc in uploads)
+                  doc['title']: {
+                    'grade': doc['grade'] ??
+                        '-', // Default to '-' if grade is not available
+                    'fileURL': doc['fileURL'] ??
+                        '', // Default to '' if fileURL is not available
+                  }
+              };
 
-                    final hasUploaded = uploadedTitles.contains(title);
+              return ListView.builder(
+                padding: EdgeInsets.all(20),
+                itemCount: tasks.length,
+                itemBuilder: (context, index) {
+                  final task = tasks[index].data() as Map<String, dynamic>;
+                  final taskId = tasks[index].id;
+                  final String? videoUrl = task['url'];
+                  String title = task['title'] ?? 'No Title';
+                  String description = task['description'] ?? 'No Description';
 
-                    return AnimatedContainer(
-                      duration: Duration(milliseconds: 300),
-                      decoration: BoxDecoration(
-                        color: Color(0xffE8E9E7),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      margin: const EdgeInsets.only(bottom: 20),
-                      padding: const EdgeInsets.all(15),
-                      height: _isExpandedList[index] ? 550 : 250,
+                  // Check if the task title is in uploads
+                  final hasUploaded = uploadData.containsKey(title);
+                  final String grade =
+                      hasUploaded ? uploadData[title]!['grade'] : '-';
+                  final String fileURL =
+                      hasUploaded ? uploadData[title]!['fileURL'] : '';
+                  // Extract video ID from URL
+                  String? videoId =
+                      YoutubePlayer.convertUrlToId(videoUrl ?? '');
+
+                  return AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    decoration: BoxDecoration(
+                      color: Color(0xffE8E9E7),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(15),
+                    child: IntrinsicHeight(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -491,7 +511,7 @@ class _TaskPageState extends State<MK13> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          task['title'] ?? 'No Title',
+                                          title,
                                           style: TextStyle(
                                             fontFamily: 'poppins',
                                             fontSize: 20,
@@ -524,194 +544,253 @@ class _TaskPageState extends State<MK13> {
                                       ),
                                     if (userRole == 'Teacher' ||
                                         userRole == 'Admin')
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.delete,
-                                                color: Colors.black),
-                                            onPressed: () {
-                                              // Konfirmasi sebelum menghapus
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  return AlertDialog(
-                                                    title: Text('Delete Task'),
-                                                    content: Text(
-                                                        'Are you sure you want to delete this task?'),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop(),
-                                                        child: Text('Cancel'),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          _deleteTask(taskId);
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        child: Text('Delete'),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.edit,
-                                                color: Colors.black),
-                                            onPressed: () {
-                                              // Konfirmasi sebelum menghapus
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  return AlertDialog(
-                                                    title: Text(
-                                                      'Edit Task',
-                                                      style: TextStyle(
-                                                          fontFamily:
-                                                              "Poppins"),
-                                                    ),
-                                                    content: Text(
-                                                      'Are you sure you want to edit this task?',
-                                                      style: TextStyle(
-                                                          fontFamily:
-                                                              "Poppins"),
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop(),
-                                                        child: Text(
-                                                          'Cancel',
-                                                          style: TextStyle(
-                                                              fontFamily:
-                                                                  "Poppins"),
-                                                        ),
-                                                      ),
-                                                      TextButton(
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                        child: Text(
-                                                          'Edit',
-                                                          style: TextStyle(
-                                                              fontFamily:
-                                                                  "Poppins"),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ],
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 0),
+                                        child: IconButton(
+                                          onPressed: () {
+                                            // Memanggil fungsi _deleteTask untuk menghapus task
+                                            _deleteTask(taskId);
+                                          },
+                                          icon: Icon(Icons.delete,
+                                              size: 30, color: Colors.red),
+                                        ),
                                       ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            child: Text(
-                              task['description'] ?? 'No Description',
+                          SizedBox(height: 10),
+                          // Menambahkan deskripsi sebelum video player
+                          Text(
+                            description,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          SizedBox(height: 20),
+                          if (videoId != null)
+                            YoutubePlayer(
+                              controller: YoutubePlayerController(
+                                initialVideoId: videoId,
+                                flags: YoutubePlayerFlags(
+                                  autoPlay: false,
+                                  mute: false,
+                                ),
+                              ),
+                              showVideoProgressIndicator: true,
+                              progressIndicatorColor: Colors.red,
+                              onReady: () {
+                                print('Video Ready');
+                              },
+                            )
+                          else
+                            Text(
+                              'Invalid or Missing Video URL',
                               style: TextStyle(
-                                fontFamily: 'poppins',
+                                fontFamily: 'Poppins',
                                 fontSize: 14,
-                                fontWeight: FontWeight.w400,
+                                color: Colors.red,
                               ),
                             ),
-                          ),
-                          Container(
-                            child: ListTile(
-                              subtitle: url != null
-                                  ? GestureDetector(
-                                      onTap: () => _launchUrl(
-                                          url), // Memanggil fungsi dengan parameter url
-                                      child: Text(
-                                        url,
-                                        style: TextStyle(
-                                          color: Colors.blue,
-                                          decoration: TextDecoration.underline,
+                          // Tabel yang muncul saat dibuka
+                          if (_isExpandedList[index])
+                            Padding(
+                              padding: const EdgeInsets.only(top: 15),
+                              child: Table(
+                                border: TableBorder.all(
+                                    color: Colors.grey, width: 1),
+                                children: [
+                                  TableRow(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          'Grade',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ),
-                                    )
-                                  : Text(
-                                      'No URL available'), // Menangani kasus jika URL tidak ada
-                            ),
-                          ),
-                          Spacer(),
-                          if (_isExpandedList[index])
-                            GestureDetector(
-                              onTap: () async {
-                                // Panggil metode untuk memilih file
-                                pickFile(); // Ganti ini dengan nama metode yang kamu gunakan
-                                setState(() {
-                                  selectedTaskTitle =
-                                      title; // Simpan title dari task yang dipilih
-                                });
-
-                                // Tampilkan snackbar untuk konfirmasi task yang dipilih
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Task "$title" selected')),
-                                );
-                              },
-                              child: Center(
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      width: 300,
-                                      height:
-                                          210, // Tinggi ditingkatkan untuk memberikan ruang lebih
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[250],
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                            color: Colors.grey, width: 1.2),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          hasUploaded
+                                              ? '$grade'
+                                              : '-', // Ternary operator
+                                          style: TextStyle(
+                                            fontFamily: 'poppins',
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  TableRow(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          'Uploaded Task',
+                                          style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
                                       ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(
-                                            16.0), // Padding untuk container utama
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment
-                                              .center, // Memusatkan kolom
-                                          crossAxisAlignment: CrossAxisAlignment
-                                              .center, // Memusatkan kolom
-                                          children: [
-                                            Transform.scale(
-                                              scale: 1.5,
-                                              child: Image(
-                                                image: AssetImage(
-                                                    'assets/images/upload.png'),
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: GestureDetector(
+                                          onTap: hasUploaded
+                                              ? () => _launchUrl(fileURL)
+                                              : null, // Null means it doesn't do anything if not uploaded
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize
+                                                .min, // Ensures Row takes minimal space
+                                            children: [
+                                              if (hasUploaded &&
+                                                  fileURL
+                                                      .isNotEmpty) // Show icon only if file is uploaded
+                                                // Add space between text and icon
+                                                if (hasUploaded &&
+                                                    fileURL.isNotEmpty)
+                                                  Icon(
+                                                    Icons
+                                                        .download, // Icon for download
+                                                    color: Colors
+                                                        .blue, // Adjust color to match your design
+                                                    size:
+                                                        16, // Adjust size if needed
+                                                  ),
+                                              SizedBox(width: 5),
+                                              Text(
+                                                hasUploaded &&
+                                                        fileURL.isNotEmpty
+                                                    ? 'Download Task'
+                                                    : '-', // Conditionally displayed text
+                                                style: TextStyle(
+                                                  fontFamily: 'Poppins',
+                                                  fontWeight: FontWeight.w500,
+                                                ),
                                               ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (_isExpandedList[index])
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: () async {
+                                    // Panggil metode untuk memilih file
+                                    pickFile(); // Ganti ini dengan nama metode yang kamu gunakan
+                                    setState(() {
+                                      selectedTaskTitle =
+                                          title; // Simpan title dari task yang dipilih
+                                    });
+
+                                    // Tampilkan snackbar untuk konfirmasi task yang dipilih
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content:
+                                              Text('Task "$title" selected')),
+                                    );
+                                  },
+                                  child: Center(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 185),
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
-                                            SizedBox(
-                                                height:
-                                                    10), // Spasi antara gambar dan teks
-                                            Container(
+                                            child: Column(
+                                              mainAxisAlignment: MainAxisAlignment
+                                                  .center, // Memusatkan kolom
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment
+                                                      .end, // Memusatkan kolom
+                                              children: [
+                                                SizedBox(
+                                                    height:
+                                                        10), // Spasi antara gambar dan teks
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: Colors
+                                                        .blue, // Anda bisa menambahkan warna atau properti lain di sini
+                                                  ),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 8.0,
+                                                        horizontal:
+                                                            16.0), // Padding jika diperlukan
+                                                    child: Text(
+                                                      'Add Submission',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        fontFamily: "Poppins",
+                                                        color: Colors
+                                                            .white, // Ubah warna teks agar lebih kontras
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (_isExpandedList[index])
+                                  Align(
+                                    alignment: Alignment
+                                        .bottomRight, // Posisikan ke pojok kanan
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          right: 16,
+                                          top: 10), // Sesuaikan jarak
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .end, // Letakkan elemen di ujung kanan
+                                        children: [
+                                          GestureDetector(
+                                            onTap: saveChanges,
+                                            child: Container(
                                               decoration: BoxDecoration(
                                                 borderRadius:
-                                                    BorderRadius.circular(30),
+                                                    BorderRadius.circular(10),
                                                 color: Colors
                                                     .blue, // Anda bisa menambahkan warna atau properti lain di sini
                                               ),
                                               child: Padding(
-                                                padding: const EdgeInsets
-                                                    .symmetric(
-                                                    vertical: 8.0,
-                                                    horizontal:
-                                                        16.0), // Padding jika diperlukan
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8.0,
+                                                        horizontal: 16.0),
                                                 child: Text(
-                                                  'Upload Here',
+                                                  'Save Changes',
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontFamily: "Poppins",
@@ -721,129 +800,71 @@ class _TaskPageState extends State<MK13> {
                                                 ),
                                               ),
                                             ),
-                                            SizedBox(
-                                                height:
-                                                    5), // Spasi antara teks dan deskripsi
-                                            Text(
-                                              'You can upload files here',
-                                              textAlign: TextAlign
-                                                  .center, // Memusatkan teks
-                                              style: TextStyle(
-                                                fontFamily: 'Poppins',
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w400,
-                                                color: Colors.grey,
+                                          ),
+                                          SizedBox(
+                                              width: 10), // Spasi antara tombol
+                                          GestureDetector(
+                                            onTap: () {},
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Colors
+                                                    .grey, // Anda bisa menambahkan warna atau properti lain di sini
+                                              ),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8.0,
+                                                        horizontal: 16.0),
+                                                child: Text(
+                                                  'Cancel',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontFamily: "Poppins",
+                                                    color: Colors
+                                                        .white, // Ubah warna teks agar lebih kontras
+                                                  ),
+                                                ),
                                               ),
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          if (_isExpandedList[index])
-                            GestureDetector(
-                              onTap: saveChanges,
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 28, top: 10),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors
-                                            .blue, // Anda bisa menambahkan warna atau properti lain di sini
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8.0,
-                                            horizontal:
-                                                16.0), // Padding jika diperlukan
-                                        child: Text(
-                                          'Save Changes',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: "Poppins",
-                                            color: Colors
-                                                .white, // Ubah warna teks agar lebih kontras
                                           ),
-                                        ),
+                                        ],
                                       ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 10),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          color: Colors
-                                              .grey, // Anda bisa menambahkan warna atau properti lain di sini
-                                        ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 8.0,
-                                              horizontal:
-                                                  16.0), // Padding jika diperlukan
-                                          child: Text(
-                                            'Cancel',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontFamily: "Poppins",
-                                              color: Colors
-                                                  .white, // Ubah warna teks agar lebih kontras
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              if (!_isExpandedList[index])
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 5),
-                                  child: Text(
-                                    "See more",
-                                    style: TextStyle(
-                                      fontFamily: 'poppins',
-                                      fontSize: 21,
-                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                ),
-                              Padding(
-                                padding: const EdgeInsets.only(right: 0),
-                                child: Transform.rotate(
-                                  angle:
-                                      _isExpandedList[index] ? 1.5708 : -1.5708,
-                                  child: IconButton(
-                                    icon: Icon(Icons.arrow_back_ios, size: 30),
-                                    onPressed: () {
-                                      setState(() {
-                                        _isExpandedList[index] =
-                                            !_isExpandedList[index];
-                                      });
-                                    },
-                                  ),
-                                ),
+                              ],
+                            ),
+
+                          // Gunakan Align untuk memposisikan panah di bagian bawah
+                          Align(
+                            alignment: Alignment.bottomRight,
+                            child: IconButton(
+                              icon: Icon(
+                                _isExpandedList[index]
+                                    ? Icons.keyboard_arrow_up
+                                    : Icons.keyboard_arrow_down,
+                                size: 30,
                               ),
-                            ],
+                              onPressed: () {
+                                setState(() {
+                                  _isExpandedList[index] =
+                                      !_isExpandedList[index];
+                                });
+                              },
+                            ),
                           ),
                         ],
                       ),
-                    );
-                  },
-                );
-              });
+                    ),
+                  );
+                },
+              );
+            },
+          );
         },
       ),
+
       floatingActionButton: (userRole == 'Teacher' || userRole == 'Admin')
           ? FloatingActionButton(
               onPressed: () {

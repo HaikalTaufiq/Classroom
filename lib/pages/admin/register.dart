@@ -221,8 +221,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           if (value!.isEmpty) {
                             return "Password cannot be empty";
                           }
-                          if (value.length < 6) {
-                            return "Please enter a valid password with at least 6 characters";
+                          if (value.length < 3) {
+                            return "Please enter a valid password with at least 3 characters";
                           }
                           return null;
                         },
@@ -408,9 +408,10 @@ class _RegisterPageState extends State<RegisterPage> {
     User? user = _auth.currentUser;
     await firebaseFirestore.collection("users").doc(user!.uid).set({
       'email': email,
-      'role': role,
       'name': name,
       'noInduk': noInduk,
+      'role': role,
+      'createdAt': FieldValue.serverTimestamp(),
     }).then((value) {
       Navigator.pushReplacement(
         context,
